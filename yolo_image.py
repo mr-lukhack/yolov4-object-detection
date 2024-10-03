@@ -53,7 +53,13 @@ net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
 net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
 
 layer = net.getLayerNames()
-layer = [layer[i[0] - 1] for i in net.getUnconnectedOutLayers()]
+
+# Dependiendo de la versión de OpenCV, el resultado de `getUnconnectedOutLayers()` puede ser un array de arrays o un array plano.
+# Verificamos el tipo de datos y lo tratamos en consecuencia.
+try:
+    layer = [layer[i - 1] for i in net.getUnconnectedOutLayers().flatten()]
+except AttributeError:
+    layer = [layer[i[0] - 1] for i in net.getUnconnectedOutLayers()]
 
 
 def detect(imgpath, nn):
