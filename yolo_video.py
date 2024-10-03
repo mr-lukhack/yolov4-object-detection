@@ -44,7 +44,7 @@ parser.add_argument("-wt", "--width", type=int, default=700,
 parser.add_argument("-c", "--confidence", type=float, default=0.5,
                     help="confidence threshold")
 parser.add_argument("-t", "--threshold", type=float, default=0.4,
-                    help="non-maximum supression threshold")
+                    help="non-maximum suppression threshold")
 
 args = parser.parse_args()
 logger.info("Parsed Arguments")
@@ -52,14 +52,14 @@ logger.info("Parsed Arguments")
 CONFIDENCE_THRESHOLD = args.confidence
 NMS_THRESHOLD = args.threshold
 if not Path(args.input).exists():
-    raise FileNotFoundError("Path to video file is not exist.")
+    raise FileNotFoundError("Path to video file does not exist.")
 
 vc = cv2.VideoCapture(args.input)
 weights = glob.glob("yolo/*.weights")[0]
 labels = glob.glob("yolo/*.txt")[0]
 cfg = glob.glob("yolo/*.cfg")[0]
 
-logger.info("Using {} weights ,{} configs and {} labels.".format(weights, cfg, labels))
+logger.info("Using {} weights, {} configs, and {} labels.".format(weights, cfg, labels))
 
 class_names = list()
 with open(labels, "r") as f:
@@ -72,7 +72,13 @@ net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
 net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
 
 layer = net.getLayerNames()
-layer = [layer[i[0] - 1] for i in net.getUnconnectedOutLayers()]
+
+# Aquí aplicamos la corrección para manejar distintas versiones de OpenCV
+try:
+    layer = [layer[i - 1] for i in net.getUnconnectedOutLayers().flatten()]
+except AttributeError:
+    layer = [layer[i[0] - 1] for i in net.getUnconnectedOutLayers()]
+
 writer = None
 
 
